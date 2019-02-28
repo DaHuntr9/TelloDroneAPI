@@ -1,4 +1,4 @@
-# NabiDrone
+# TelloDroneAPI
 This is a personal project to connect to the Ryze Tello Drone that is shared with a group of FGCU Software Engineers: careyes17, tgayle, and G-Reg26.
 <br>
 We are currently looking the SDK Supplied by Tello: 
