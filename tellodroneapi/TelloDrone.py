@@ -6,7 +6,6 @@ from djitellopy.decorators import accepts
 """
 import asyncio
 import socket
-import threading
 from tellodroneapi.DroneControls import DroneControl
 from tellodroneapi.DroneConnection import DroneConnection
 
@@ -34,6 +33,8 @@ class Drone:
     VIDEO_IP = '0.0.0.0'
     VIDEO_PORT = 11111
 
+    DEFAULT_TIMEOUT = 3  # seconds
+
     # need to create a capturing object Pref OPEN CV2
 
     # Constructor of Drone Class
@@ -42,6 +43,7 @@ class Drone:
 
         # Prepare socket for connection with drone.
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sender.settimeout(self.DEFAULT_TIMEOUT)
         self.sender.bind(('', self.DRONE_RECV_PORT))  # Prepare to listen for messages from drone
         self.drone_response = None
 
@@ -65,24 +67,26 @@ class Drone:
     def send_command(self, message):
         self.sender.sendto(message, (self.DRONE_IP, self.DRONE_PORT))
 
-    # Listens for if a Message is send back on this port.
-    def run_udp_receiver(self):
+    async def await_drone_response(self, timeout=DEFAULT_TIMEOUT):
+        """
+        Waits for a response from the drone's UDP connection, optionally timing
+        out if there's no response.
+        :param timeout: int The amount of time, in seconds to wait before considering this a timeout.
+        :return: The string response from the drone, or None if there is no response.
+        """
+        result = await asyncio.wait_for(self._wait_for_response(), timeout=timeout)
+        return result
+
+    async def _wait_for_response(self):
+        """
+        Utility function to allow cleanly async-awaiting responses from the drone.
+        :return: The string response from the drone or None if there is no response.
+        """
         try:
-            asyncio.wait_for(self.wait_for_response(), timeout=1.0)
-        except asyncio.TimeoutError:
-            print('timeout!')
-
-    async def await_drone_response(self, timeout=5):
-        return (await asyncio.wait_for(self.wait_for_response(), timeout=timeout)) or None
-
-    # async receiver
-    async def wait_for_response(self):
-        while True:
             data, addr = self.sender.recvfrom(1024)  # buffer size is 1024 bytes
-            print("received message:", data)
-            if data is not None:
-                print("Successful Connection!")
-                return True
+            return data.decode('UTF-8')  # Convert response back into string since it's returned as bytes
+        except socket.timeout:
+            return None
 
 
 if __name__ == '__main__':
