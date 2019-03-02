@@ -14,8 +14,7 @@ from tellodroneapi.DroneConnection import DroneConnection
 class Drone:
     drone_control = DroneControl()
     drone_connection = DroneConnection()
-    sender = None
-    receiver = None
+
     # IP address of drone when on drone network.
     DRONE_IP = '192.168.10.1'
 
@@ -24,7 +23,8 @@ class Drone:
     Set up a UDP client on PC, Mac or Mobile device to send,
     and receive message from Tello via the same port.
     """
-    DRONE_PORT = 8889 
+    DRONE_PORT = 8889
+    DRONE_RECV_PORT = 8890
     
     # Variables to be implemented
     # Time out for responses from and to the drone
@@ -39,17 +39,26 @@ class Drone:
     # Constructor of Drone Class
     def __init__(self):
         # This is the address and port that the drone will send and receive messages.
-        self.connect()
-        self.listen()
+
+        # Prepare socket for connection with drone.
+        self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sender.bind(('', self.DRONE_RECV_PORT))  # Prepare to listen for messages from drone
+        self.drone_response = None
+
+        asyncio.run(self.connect())
 
     # This is going to set up the socket for the connection to be established to the drone.
-    def connect(self):
+    async def connect(self):
         print("Establishing connection to...")
         print("Target IP:", self.DRONE_IP)
         print("Target UDP PORT:", self.DRONE_PORT)
         command = b'command'
-        self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sender.sendto(command, (self.DRONE_IP, self.DRONE_PORT))
+        self.drone_response = (await asyncio.wait_for(self.wait_for_response(), timeout=5)) or None
+        if self.drone_response:
+            print("Successful Response:", self.drone_response)
+        else:
+            print("No response :c")
 
     # Creates a listens to the drone has sent a message back.
     def listen(self):
@@ -67,8 +76,12 @@ class Drone:
     # async receiver
     async def wait_for_response(self):
         while True:
-            data, addr = self.sender.recvfrom(self.DRONE_PORT)  # buffer size is 1024 bytes
+            data, addr = self.sender.recvfrom(1024)  # buffer size is 1024 bytes
             print("received message:", data)
             if data is not None:
                 print("Successful Connection!")
                 return True
+
+
+if __name__ == '__main__':
+    drone = Drone()
