@@ -53,18 +53,17 @@ class Drone:
         print("Target IP:", self.DRONE_IP)
         print("Target UDP PORT:", self.DRONE_PORT)
         command = b'command'
-        self.sender.sendto(command, (self.DRONE_IP, self.DRONE_PORT))
-        self.drone_response = (await asyncio.wait_for(self.wait_for_response(), timeout=5)) or None
+
+        self.send_command(command)
+        self.drone_response = await self.await_drone_response()
+
         if self.drone_response:
             print("Successful Response:", self.drone_response)
         else:
             print("No response :c")
 
-    # Creates a listens to the drone has sent a message back.
-    def listen(self):
-        receiver = threading.Thread(target=self.run_udp_receiver, args=())  # Calls function to listen on the port
-        receiver.daemon = True  # closing connection issues dealt here
-        receiver.start()  # executes receiver thread
+    def send_command(self, message):
+        self.sender.sendto(message, (self.DRONE_IP, self.DRONE_PORT))
 
     # Listens for if a Message is send back on this port.
     def run_udp_receiver(self):
@@ -72,6 +71,9 @@ class Drone:
             asyncio.wait_for(self.wait_for_response(), timeout=1.0)
         except asyncio.TimeoutError:
             print('timeout!')
+
+    async def await_drone_response(self, timeout=5):
+        return (await asyncio.wait_for(self.wait_for_response(), timeout=timeout)) or None
 
     # async receiver
     async def wait_for_response(self):
