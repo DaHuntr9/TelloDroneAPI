@@ -6,14 +6,17 @@ from djitellopy.decorators import accepts
 """
 import asyncio
 import socket
+
+from tellodroneapi.Drone import Drone
 from tellodroneapi.DroneControls import DroneControl
 from tellodroneapi.DroneConnection import DroneConnection
 
 
-class Drone:
+class TelloDrone(Drone):
     drone_control = DroneControl()
     drone_connection = DroneConnection()
 
+    # This is the address and port that the drone will send and receive messages.
     # IP address of drone when on drone network.
     DRONE_IP = '192.168.10.1'
 
@@ -39,18 +42,18 @@ class Drone:
 
     # Constructor of Drone Class
     def __init__(self):
-        # This is the address and port that the drone will send and receive messages.
-
         # Prepare socket for connection with drone.
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sender.settimeout(self.DEFAULT_TIMEOUT)
         self.sender.bind(('', self.DRONE_RECV_PORT))  # Prepare to listen for messages from drone
         self.drone_response = None
 
-        asyncio.run(self.connect())
-
     # This is going to set up the socket for the connection to be established to the drone.
     async def connect(self):
+        """
+        Establishes and attempts to connect to a drone by sending the initial "command" command.
+        :return: True if a connection was successful, or False otherwise.
+        """
         print("Establishing connection to...")
         print("Target IP:", self.DRONE_IP)
         print("Target UDP PORT:", self.DRONE_PORT)
@@ -59,10 +62,7 @@ class Drone:
         self.send_command(command)
         self.drone_response = await self.await_drone_response()
 
-        if self.drone_response:
-            print("Successful Response:", self.drone_response)
-        else:
-            print("No response :c")
+        return bool(self.drone_response)
 
     def send_command(self, message):
         self.sender.sendto(message, (self.DRONE_IP, self.DRONE_PORT))
@@ -87,7 +87,3 @@ class Drone:
             return data.decode('UTF-8')  # Convert response back into string since it's returned as bytes
         except socket.timeout:
             return None
-
-
-if __name__ == '__main__':
-    drone = Drone()
