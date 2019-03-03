@@ -8,8 +8,9 @@ async def main():
     print(f"Drone was{' unsuccessfully' if not connected else ''} connected. Response: {connected}")
 
     if connected:
-        battery = await drone.send_command_and_await("battery?")
-        print(f"Battery is currently at {battery}%")
+        battery = await drone.connection.get_battery_level()
+        temp = await drone.connection.get_temperature()
+        print(f"Battery is currently at {battery}% and temperature is {temp} C")
 
         if input("Enter 'ok' to attempt takeoff and land: ") == 'ok':
             print("Attempting takeoff...")
