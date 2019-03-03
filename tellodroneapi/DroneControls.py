@@ -23,6 +23,13 @@ class DroneControl:
     async def land(self) -> DroneResponse:
         return await self._send_control("land")
 
+    async def land_emergency(self) -> DroneResponse:
+        """
+        Stops all motors immediately.
+        :return: DroneResponse
+        """
+        return await self._send_control("emergency")
+
     def _should_run_async(self, command: Coroutine) -> Coroutine[Any, Any, DroneResponse]:
         """
         Checks if run_controls_async is True and returns the command passed in if
