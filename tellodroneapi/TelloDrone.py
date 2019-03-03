@@ -91,6 +91,6 @@ class TelloDrone(Drone):
         try:
             data, addr = self.sender.recvfrom(1024)  # buffer size is 1024 bytes
             # Convert response back into string since it's returned as bytes
-            return data.decode('UTF-8')
+            return data.decode('UTF-8').strip()
         except socket.timeout:
             return None

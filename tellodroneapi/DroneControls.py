@@ -1,4 +1,4 @@
-from typing import Coroutine
+from typing import Coroutine, Any
 
 from tellodroneapi.Drone import Drone, DroneResponse
 
@@ -17,13 +17,13 @@ class DroneControl:
         self.drone = drone
         self.run_controls_async = run_controls_async
 
-    async def takeoff(self) -> Coroutine[DroneResponse]:
+    async def takeoff(self) -> Coroutine[Any, Any, DroneResponse]:
         return await self._send_control("takeoff")
 
-    async def land(self) -> Coroutine[DroneResponse]:
+    async def land(self) -> Coroutine[Any, Any, DroneResponse]:
         return await self._send_control("land")
 
-    def _should_run_async(self, command: Coroutine) -> Coroutine[DroneResponse]:
+    def _should_run_async(self, command: Coroutine) -> Coroutine[Any, Any, DroneResponse]:
         """
         Checks if run_controls_async is True and returns the command passed in if
         it is, otherwise returning an async-wrapped None value
@@ -35,7 +35,7 @@ class DroneControl:
         else:
             return async_none()
 
-    async def _send_control(self, message: str) -> Coroutine[DroneResponse]:
+    async def _send_control(self, message: str) -> Coroutine[Any, Any, DroneResponse]:
         """
         Sends a control command to the associated drone and returns an async future that is either
         the proper response from the drone, or None is should_run_async is false.
