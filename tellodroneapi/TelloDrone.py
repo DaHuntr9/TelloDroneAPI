@@ -7,15 +7,12 @@ from djitellopy.decorators import accepts
 import asyncio
 import socket
 
-from tellodroneapi.Drone import Drone
+from tellodroneapi.Drone import Drone, DroneResponse
 from tellodroneapi.DroneControls import DroneControl
 from tellodroneapi.DroneConnection import DroneConnection
 
 
 class TelloDrone(Drone):
-    drone_control = DroneControl()
-    drone_connection = DroneConnection()
-
     # This is the address and port that the drone will send and receive messages.
     # IP address of drone when on drone network.
     DRONE_IP = '192.168.10.1'
@@ -48,6 +45,9 @@ class TelloDrone(Drone):
         self.sender.bind(('', self.DRONE_RECV_PORT))  # Prepare to listen for messages from drone
         self.drone_response = None
 
+        self.control = DroneControl(self)
+        self.connection = DroneConnection(self)
+
     # This is going to set up the socket for the connection to be established to the drone.
     async def connect(self):
         """
@@ -68,7 +68,7 @@ class TelloDrone(Drone):
         message_as_bytes = bytes(message, 'UTF-8')
         self.sender.sendto(message_as_bytes, (self.DRONE_IP, self.DRONE_PORT))
 
-    async def await_drone_response(self, timeout=DEFAULT_TIMEOUT) -> str or None:
+    async def await_drone_response(self, timeout=DEFAULT_TIMEOUT) -> DroneResponse:
         """
         Waits for a response from the drone's UDP connection, optionally timing
         out if there's no response.
@@ -79,7 +79,7 @@ class TelloDrone(Drone):
         return result
 
     async def send_command_and_await(self, message: str,
-                                     timeout: int = DEFAULT_TIMEOUT) -> str or None:
+                                     timeout: int = DEFAULT_TIMEOUT) -> DroneResponse:
         self.send_command(message)
         return await self.await_drone_response(timeout)
 
@@ -90,7 +90,6 @@ class TelloDrone(Drone):
         """
         try:
             data, addr = self.sender.recvfrom(1024)  # buffer size is 1024 bytes
-
             # Convert response back into string since it's returned as bytes
             return data.decode('UTF-8')
         except socket.timeout:
