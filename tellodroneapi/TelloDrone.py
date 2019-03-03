@@ -45,6 +45,12 @@ class TelloDrone(Drone):
         self.sender.bind(('', self.DRONE_RECV_PORT))  # Prepare to listen for messages from drone
         self.drone_response = None
 
+        self.time_between_commands = 1
+        """
+        The amount of time in seconds to wait before commands. Sending commands too quickly leads
+        to the drone ignoring them sometimes.
+        """
+
         self.control = DroneControl(self)
         self.connection = DroneConnection(self)
 
@@ -71,11 +77,14 @@ class TelloDrone(Drone):
     async def await_drone_response(self, timeout=DEFAULT_TIMEOUT) -> DroneResponse:
         """
         Waits for a response from the drone's UDP connection, optionally timing
-        out if there's no response.
+        out if there's no response. Also inserts an artificial delay between commands matching
+        time_between_commands
+
         :param timeout: int The amount of time, in seconds to wait before considering this a timeout
         :return: The string response from the drone, or None if there is no response.
         """
         result = await asyncio.wait_for(self._wait_for_response(), timeout=timeout)
+        await asyncio.sleep(self.time_between_commands)
         return result
 
     async def send_command_and_await(self, message: str,
