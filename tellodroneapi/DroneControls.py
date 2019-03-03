@@ -17,10 +17,10 @@ class DroneControl:
         self.drone = drone
         self.run_controls_async = run_controls_async
 
-    async def takeoff(self) -> Coroutine[Any, Any, DroneResponse]:
+    async def takeoff(self) -> DroneResponse:
         return await self._send_control("takeoff")
 
-    async def land(self) -> Coroutine[Any, Any, DroneResponse]:
+    async def land(self) -> DroneResponse:
         return await self._send_control("land")
 
     def _should_run_async(self, command: Coroutine) -> Coroutine[Any, Any, DroneResponse]:
@@ -35,7 +35,7 @@ class DroneControl:
         else:
             return async_none()
 
-    async def _send_control(self, message: str) -> Coroutine[Any, Any, DroneResponse]:
+    def _send_control(self, message: str) -> Coroutine[Any, Any, DroneResponse]:
         """
         Sends a control command to the associated drone and returns an async future that is either
         the proper response from the drone, or None is should_run_async is false.
@@ -43,7 +43,7 @@ class DroneControl:
         :return: The response from the drone, or None if run_controls_async is false.
         """
         command = self.drone.send_command_and_await(message)
-        return await self._should_run_async(command)
+        return self._should_run_async(command)
 
 
 async def async_none():
