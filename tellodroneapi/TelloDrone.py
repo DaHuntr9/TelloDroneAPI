@@ -27,7 +27,7 @@ class TelloDrone(Drone):
     """
     DRONE_PORT = 8889
     DRONE_RECV_PORT = 8890
-    
+
     # Variables to be implemented
     # Time out for responses from and to the drone
     # Last time the communication was made with the drone.
@@ -57,7 +57,7 @@ class TelloDrone(Drone):
         print("Establishing connection to...")
         print("Target IP:", self.DRONE_IP)
         print("Target UDP PORT:", self.DRONE_PORT)
-        command = b'command'
+        command = 'command'
 
         self.send_command(command)
         self.drone_response = await self.await_drone_response()
@@ -65,17 +65,23 @@ class TelloDrone(Drone):
         return bool(self.drone_response)
 
     def send_command(self, message):
-        self.sender.sendto(message, (self.DRONE_IP, self.DRONE_PORT))
+        message_as_bytes = bytes(message, 'UTF-8')
+        self.sender.sendto(message_as_bytes, (self.DRONE_IP, self.DRONE_PORT))
 
-    async def await_drone_response(self, timeout=DEFAULT_TIMEOUT):
+    async def await_drone_response(self, timeout=DEFAULT_TIMEOUT) -> str or None:
         """
         Waits for a response from the drone's UDP connection, optionally timing
         out if there's no response.
-        :param timeout: int The amount of time, in seconds to wait before considering this a timeout.
+        :param timeout: int The amount of time, in seconds to wait before considering this a timeout
         :return: The string response from the drone, or None if there is no response.
         """
         result = await asyncio.wait_for(self._wait_for_response(), timeout=timeout)
         return result
+
+    async def send_command_and_await(self, message: str,
+                                     timeout: int = DEFAULT_TIMEOUT) -> str or None:
+        self.send_command(message)
+        return await self.await_drone_response(timeout)
 
     async def _wait_for_response(self):
         """
@@ -84,6 +90,8 @@ class TelloDrone(Drone):
         """
         try:
             data, addr = self.sender.recvfrom(1024)  # buffer size is 1024 bytes
-            return data.decode('UTF-8')  # Convert response back into string since it's returned as bytes
+
+            # Convert response back into string since it's returned as bytes
+            return data.decode('UTF-8')
         except socket.timeout:
             return None
