@@ -72,6 +72,7 @@ class TelloDrone(Drone):
         """
         Waits for a response from the drone's UDP connection, optionally timing
         out if there's no response.
+
         :param timeout: int The amount of time, in seconds to wait before considering this a timeout
         :return: The string response from the drone, or None if there is no response.
         """
@@ -91,6 +92,6 @@ class TelloDrone(Drone):
         try:
             data, addr = self.sender.recvfrom(1024)  # buffer size is 1024 bytes
             # Convert response back into string since it's returned as bytes
-            return data.decode('UTF-8')
+            return data.decode('UTF-8').strip()
         except socket.timeout:
             return None
