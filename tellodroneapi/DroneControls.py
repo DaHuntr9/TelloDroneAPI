@@ -1,3 +1,4 @@
+import asyncio
 from typing import Coroutine, Any
 
 from tellodroneapi.Drone import Drone, DroneResponse
@@ -16,6 +17,12 @@ class DroneControl:
         """
         self.drone = drone
         self.run_controls_async = run_controls_async
+
+        self.time_between_commands = 1
+        """
+        The amount of time in seconds to wait before commands. Sending commands too quickly leads
+        to the drone ignoring them sometimes.
+        """
 
     async def takeoff(self) -> DroneResponse:
         return await self._send_control("takeoff")
@@ -42,15 +49,18 @@ class DroneControl:
         else:
             return async_none()
 
-    def _send_control(self, message: str) -> Coroutine[Any, Any, DroneResponse]:
+    async def _send_control(self, message: str) -> DroneResponse:
         """
         Sends a control command to the associated drone and returns an async future that is either
-        the proper response from the drone, or None is should_run_async is false.
+        the proper response from the drone, or None is should_run_async is false. If
+        time_between_commands has been set, then this will not return until that time has passed.
+
         :param message: str A control command
         :return: The response from the drone, or None if run_controls_async is false.
         """
         command = self.drone.send_command_and_await(message)
-        return self._should_run_async(command)
+        await asyncio.sleep(self.time_between_commands)
+        return await self._should_run_async(command)
 
 
 async def async_none():
