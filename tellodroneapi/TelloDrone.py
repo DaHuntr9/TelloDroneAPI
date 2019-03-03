@@ -13,9 +13,6 @@ from tellodroneapi.DroneConnection import DroneConnection
 
 
 class TelloDrone(Drone):
-    drone_control = DroneControl()
-    drone_connection = DroneConnection()
-
     # This is the address and port that the drone will send and receive messages.
     # IP address of drone when on drone network.
     DRONE_IP = '192.168.10.1'
@@ -47,6 +44,9 @@ class TelloDrone(Drone):
         self.sender.settimeout(self.DEFAULT_TIMEOUT)
         self.sender.bind(('', self.DRONE_RECV_PORT))  # Prepare to listen for messages from drone
         self.drone_response = None
+
+        self.control = DroneControl(self)
+        self.connection = DroneConnection(self)
 
     # This is going to set up the socket for the connection to be established to the drone.
     async def connect(self):

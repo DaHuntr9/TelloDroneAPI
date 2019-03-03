@@ -1,2 +1,6 @@
+from tellodroneapi.Drone import Drone
+
+
 class DroneControl:
-    CommandUp = 'String to enter in '
+    def __init__(self, drone: Drone):
+        self.drone = drone
