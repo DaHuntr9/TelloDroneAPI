@@ -7,7 +7,7 @@ class DroneConnection:
         self.drone = drone
 
     async def get_battery_level(self) -> int:
-        return int(await self.drone.send_command_and_await("battery?"))
+        return await self.drone.send_command_and_await("battery?")
 
     async def get_temperature(self) -> int:  # In celsius
-        return int(await self.drone.send_command_and_await("temp?"))
+        return await self.drone.send_command_and_await("temp?")

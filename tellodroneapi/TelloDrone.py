@@ -6,6 +6,7 @@ from djitellopy.decorators import accepts
 """
 import asyncio
 import socket
+import threading
 
 from tellodroneapi.Drone import Drone, DroneResponse
 from tellodroneapi.DroneControls import DroneControl
@@ -41,8 +42,7 @@ class TelloDrone(Drone):
     def __init__(self):
         # Prepare socket for connection with drone.
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sender.settimeout(self.DEFAULT_TIMEOUT)
-        self.sender.bind(('', self.DRONE_RECV_PORT))  # Prepare to listen for messages from drone
+        self.sender.bind(('', self.DRONE_PORT))  # Prepare to listen for messages from drone
         self.drone_response = None
 
         self.control = DroneControl(self)
@@ -59,10 +59,36 @@ class TelloDrone(Drone):
         print("Target UDP PORT:", self.DRONE_PORT)
         command = 'command'
 
+        self._initialize_drone_listener()
         self.send_command(command)
-        self.drone_response = await self.await_drone_response()
+        response = await self.await_drone_response()
 
-        return bool(self.drone_response)
+        return bool(response)
+
+    def _initialize_drone_listener(self):
+        """
+        Starts another thread that listens for responses from the drone.
+        :return: None
+        """
+        thread = threading.Thread(target=self._drone_response_listener)
+        thread.daemon = True
+        thread.start()
+
+    def _drone_response_listener(self):
+        """
+        Infinite loop that constantly polls for responses from the drone and stores them in
+        drone_response. This should be run on another thread to prevent blocking the rest of the
+        application
+        :return: None
+        """
+        while True:
+            try:
+                data, addr = self.sender.recvfrom(1024)  # buffer size is 1024 bytes
+                # Convert response back into string since it's returned as bytes
+                self.drone_response = data.decode('UTF-8').strip() or None
+            except:
+                # Ignore any errors here and hope for the next response to be good.
+                pass
 
     def send_command(self, message):
         message_as_bytes = bytes(message, 'UTF-8')
@@ -86,12 +112,13 @@ class TelloDrone(Drone):
 
     async def _wait_for_response(self):
         """
-        Utility function to allow cleanly async-awaiting responses from the drone.
+        Utility function to allow cleanly async-awaiting responses from the drone. Blocks until we
+        get a response from the drone, then clears out drone_response and returns the last value.
         :return: The string response from the drone or None if there is no response.
         """
-        try:
-            data, addr = self.sender.recvfrom(1024)  # buffer size is 1024 bytes
-            # Convert response back into string since it's returned as bytes
-            return data.decode('UTF-8').strip()
-        except socket.timeout:
-            return None
+        while self.drone_response is None:
+            pass
+        else:
+            result = self.drone_response
+            self.drone_response = None
+            return result

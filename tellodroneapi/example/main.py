@@ -25,5 +25,13 @@ async def main():
         else:
             print("Takeoff and landing test skipped.")
 
+        user_input = input('Live command mode active. Enter a command to run. Enter exit to end: ')
+        while user_input != 'exit':
+            user_input = input("> ")
+            response = await drone.send_command_and_await(user_input)
+            print(response)
+        else:
+            print("Live command mode ended")
+
 if __name__ == '__main__':
     asyncio.run(main())
