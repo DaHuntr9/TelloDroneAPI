@@ -19,7 +19,7 @@ class Drone:
         """
         raise RuntimeError("Connecting has not been implemented by this drone.")
 
-    async def send_command(self, message: str) -> None:
+    def send_command(self, message: str) -> None:
         """
         Sends a message to a drone device.
         :param message: str The message or command to send to the drone.
