@@ -29,13 +29,15 @@ class Drone:
         """
         raise RuntimeError("Connecting has not been implemented by this drone.")
 
-    def send_command(self, message: str) -> None:
+    def send_command(self, message: str, ignore_error=False) -> None:
         """
         Sends a message to a drone device.
+        :param ignore_error: bool True if drone should be sent a message regardless of connection
+            status.
         :param message: str The message or command to send to the drone.
         :return: None
         """
-        if not self.silent_errors and not self.connected:
+        if not self.silent_errors and not self.connected and not ignore_error:
             raise RuntimeError("This drone is not connected.")
 
     async def await_drone_response(self, timeout: int) -> DroneResponse:

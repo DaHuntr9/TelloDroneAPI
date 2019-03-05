@@ -48,7 +48,6 @@ class TelloDrone(Drone):
         self.control = DroneControl(self)
         self.connection = DroneConnection(self)
 
-
     # This is going to set up the socket for the connection to be established to the drone.
     async def connect(self):
         """
@@ -61,10 +60,12 @@ class TelloDrone(Drone):
         command = 'command'
 
         self._initialize_drone_listener()
-        self.send_command(command)
+        self.send_command(command, ignore_error=True)
         response = await self.await_drone_response()
+        if bool(response):
+            self.connected = True
 
-        return bool(response)
+        return self.connected
 
     def _initialize_drone_listener(self):
         """
@@ -91,8 +92,8 @@ class TelloDrone(Drone):
                 # Ignore any errors here and hope for the next response to be good.
                 pass
 
-    def send_command(self, message):
-        super(TelloDrone, self).send_command(message)
+    def send_command(self, message, ignore_error=False):
+        super(TelloDrone, self).send_command(message, ignore_error=ignore_error)
         message_as_bytes = bytes(message, 'UTF-8')
         self.sender.sendto(message_as_bytes, (self.DRONE_IP, self.DRONE_PORT))
 
