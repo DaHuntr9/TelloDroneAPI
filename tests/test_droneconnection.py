@@ -14,6 +14,12 @@ async def test_connect(drone):
 
 
 @pytest.mark.asyncio
+async def test_drone_command_fails_silently_if_set_and_not_connected(drone):
+    drone.silent_errors = True
+    assert await drone.connection.get_battery_level() is not None
+
+
+@pytest.mark.asyncio
 async def test_drone_command_fails_if_not_connected(drone: MockDrone):
     with pytest.raises(RuntimeError):
         await drone.connection.get_battery_level()
