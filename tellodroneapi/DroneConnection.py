@@ -28,12 +28,12 @@ class DroneConnection:
         """
         return float(await self.drone.send_command_and_await("speed?"))
 
-    async def get_altitude(self) -> int:
+    async def get_altitude(self) -> float:
         """
         Returns the drone's using it's barometric calculations.
         :return: int
         """
-        return int(await self.drone.send_command_and_await("baro?"))
+        return float(await self.drone.send_command_and_await("baro?"))
 
     async def get_height(self) -> str:
         """
@@ -49,7 +49,7 @@ class DroneConnection:
         attitude = await self.drone.send_command_and_await("attitude?")
         # Example drone response: 'pitch:-5;roll:0;yaw:0;'
         pitch, roll, yaw = attitude.strip().split(";")[0:3]
-        return _get_state_value(pitch), _get_state_value(roll), _get_state_value(yaw)
+        return int(_get_state_value(pitch)), int(_get_state_value(roll)), int(_get_state_value(yaw))
 
     async def get_pitch(self):
         pitch, _, _ = await self.get_attitude()
@@ -83,7 +83,7 @@ class DroneConnection:
         acceleration = await self.drone.send_command_and_await("acceleration?")
         accel_x, accel_y, accel_z = acceleration.split(';')[0:3]
 
-        return _get_state_value(accel_x), _get_state_value(accel_y), _get_state_value(accel_z)
+        return float(_get_state_value(accel_x)), float(_get_state_value(accel_y)), float(_get_state_value(accel_z))
 
     async def get_acceleration_x(self):
         accel_x, _, _ = await self.get_acceleration()
