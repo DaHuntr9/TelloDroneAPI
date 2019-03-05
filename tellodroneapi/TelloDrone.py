@@ -7,6 +7,7 @@ from djitellopy.decorators import accepts
 import asyncio
 import socket
 import threading
+import cv2
 
 from tellodroneapi.Drone import Drone, DroneResponse
 from tellodroneapi.DroneControls import DroneControl
@@ -48,6 +49,11 @@ class TelloDrone(Drone):
         self.control = DroneControl(self)
         self.connection = DroneConnection(self)
 
+        self.cap = None
+        self.cap_frame = None
+
+        self.video_address = 'udp://@' + self.VIDEO_IP + ':' + str(self.VIDEO_PORT)
+
     # This is going to set up the socket for the connection to be established to the drone.
     async def connect(self):
         """
@@ -66,6 +72,29 @@ class TelloDrone(Drone):
             self.connected = True
 
         return self.connected
+
+    def get_capture_frame(self):
+        """
+        Initializes the drone's video capture and returns capture frame
+        :return: Frame from video capture
+        """
+        if self.cap_frame is None:
+            self.cap = cv2.VideoCapture(self.video_address)
+
+            if not self.cap.isOpened():
+                self.cap.open(self.video_address)
+
+            _, self.cap_frame = self.cap.read()
+
+            thread = threading.Thread(target=self.read_capture, args=())
+            thread.daemon = True
+            thread.start()
+
+        return self.cap_frame
+
+    def read_capture(self):
+        while self.cap.isOpened():
+            (_, self.cap_frame) = self.cap.read()
 
     def _initialize_drone_listener(self):
         """
