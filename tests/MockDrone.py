@@ -17,14 +17,17 @@ DRONE_RESPONSES = {
 
 class MockDrone(Drone):
     def __init__(self):
+        super().__init__()
         self.control = DroneControl(self)
         self.connection = DroneConnection(self)
         self.drone_response = None
 
     async def connect(self) -> bool:
+        self.connected = True
         return True
 
     def send_command(self, message: str) -> None:
+        super(MockDrone, self).send_command(message)
         self.send_mock_command(message)
 
     async def await_drone_response(self, timeout: int) -> DroneResponse:

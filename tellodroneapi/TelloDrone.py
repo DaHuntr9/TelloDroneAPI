@@ -40,6 +40,7 @@ class TelloDrone(Drone):
 
     # Constructor of Drone Class
     def __init__(self):
+        super().__init__()
         # Prepare socket for connection with drone.
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sender.bind(('', self.DRONE_PORT))  # Prepare to listen for messages from drone
@@ -91,6 +92,7 @@ class TelloDrone(Drone):
                 pass
 
     def send_command(self, message):
+        super(TelloDrone, self).send_command(message)
         message_as_bytes = bytes(message, 'UTF-8')
         self.sender.sendto(message_as_bytes, (self.DRONE_IP, self.DRONE_PORT))
 

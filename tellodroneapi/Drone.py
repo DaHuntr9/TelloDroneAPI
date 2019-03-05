@@ -9,6 +9,9 @@ in case of direct responses from the drone, or None if there was an issue gettin
 
 
 class Drone:
+    def __init__(self):
+        self.connected = False
+
     """
     A base class representing a drone. Implementations of Drones should be subclasses of this class.
     """
@@ -25,7 +28,8 @@ class Drone:
         :param message: str The message or command to send to the drone.
         :return: None
         """
-        pass
+        if not self.connected:
+            raise RuntimeError("This drone is not connected.")
 
     async def await_drone_response(self, timeout: int) -> DroneResponse:
         """
