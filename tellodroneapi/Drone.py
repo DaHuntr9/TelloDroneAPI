@@ -1,6 +1,5 @@
 from typing import Optional
 
-
 DroneResponse: Optional[str] = Optional[str]
 """
 Wrapper for the expected responses from any calls to the drone. Either a string should be returned
@@ -15,6 +14,10 @@ class Drone:
         """
         If this is set to true, then any commands send to the drone while not connected will fail silently.
         """
+
+        self.control = None
+        self.connection = None
+        self.drone_response = None
 
     """
     A base class representing a drone. Implementations of Drones should be subclasses of this class.

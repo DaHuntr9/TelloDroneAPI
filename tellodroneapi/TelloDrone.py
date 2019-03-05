@@ -44,10 +44,10 @@ class TelloDrone(Drone):
         # Prepare socket for connection with drone.
         self.sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sender.bind(('', self.DRONE_PORT))  # Prepare to listen for messages from drone
-        self.drone_response = None
 
         self.control = DroneControl(self)
         self.connection = DroneConnection(self)
+
 
     # This is going to set up the socket for the connection to be established to the drone.
     async def connect(self):
