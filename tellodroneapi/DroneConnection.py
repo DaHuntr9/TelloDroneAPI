@@ -97,6 +97,22 @@ class DroneConnection:
         _, _, accel_z = await self.get_acceleration()
         return accel_z
 
+    async def set_stream_on(self):
+        """
+        Sets the drone's video stream on
+
+        :return:
+        """
+        await self.drone.send_command_and_await('streamon')
+
+    async def set_stream_off(self):
+        """
+        Sets the drone's video stream off
+
+        :return:
+        """
+        await self.drone.send_command_and_await('streamoff')
+
 
 def _get_state_value(pair: str):
     """
