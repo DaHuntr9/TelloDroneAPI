@@ -1,6 +1,5 @@
 from typing import Optional
 
-
 DroneResponse: Optional[str] = Optional[str]
 """
 Wrapper for the expected responses from any calls to the drone. Either a string should be returned
@@ -9,6 +8,17 @@ in case of direct responses from the drone, or None if there was an issue gettin
 
 
 class Drone:
+    def __init__(self):
+        self.connected = False
+        self.silent_errors = False
+        """
+        If this is set to true, then any commands send to the drone while not connected will fail silently.
+        """
+
+        self.control = None
+        self.connection = None
+        self.drone_response = None
+
     """
     A base class representing a drone. Implementations of Drones should be subclasses of this class.
     """
@@ -19,13 +29,14 @@ class Drone:
         """
         raise RuntimeError("Connecting has not been implemented by this drone.")
 
-    async def send_command(self, message: str) -> None:
+    def send_command(self, message: str) -> None:
         """
         Sends a message to a drone device.
         :param message: str The message or command to send to the drone.
         :return: None
         """
-        pass
+        if not self.silent_errors and not self.connected:
+            raise RuntimeError("This drone is not connected.")
 
     async def await_drone_response(self, timeout: int) -> DroneResponse:
         """
